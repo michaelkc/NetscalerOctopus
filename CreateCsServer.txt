@@ -1,0 +1,30 @@
+# Create Netscaler Content Switching Server
+#
+# Requirement: Octopus variables
+# CSServerBasename
+#   e.g. STAR.SOMEDOMAIN.DK
+# CSServerCertKeyName
+#   e.g. star.somedomain.dk-2016
+#   cert file in PEM format with private key must exist on netscaler in /nsconfig/ssl/
+# CSServerIp
+#   e.g. 10.0.89.240
+#
+# Requirement: Pre-existing configuration on Netscaler
+#   csp_hostheadervserver policy must be defined
+#   segesciphersuite20151126 cipher must be defined
+#
+# Removal of created artifacts
+#   rm cs vserver #{CSServerBasename}_SSL
+#   rm cs vserver #{CSServerBasename}_HTTP
+#
+# Do not paste lines beginning with # into the Octopus variable, as it confuses the step template
+#
+add cs vserver #{CSServerBasename}_SSL SSL #{CSServerIp} 443
+bind cs vserver #{CSServerBasename}_SSL -policyName csp_hostheadervserver -priority 1
+unbind ssl vserver #{CSServerBasename}_SSL -cipherName ALL
+bind ssl vserver #{CSServerBasename}_SSL -cipherName segesciphersuite20151126
+bind ssl vserver #{CSServerBasename}_SSL -certKeyName #{CSServerCertKeyName}
+bind ssl vserver #{CSServerBasename}_SSL -eccCurveName ALL
+set ssl vserver #{CSServerBasename}_SSL -ssl3 DISABLED
+add cs vserver #{CSServerBasename}_HTTP HTTP #{CSServerIp} 80
+bind cs vserver #{CSServerBasename}_HTTP -policyName csp_hostheadervserver -priority 1
